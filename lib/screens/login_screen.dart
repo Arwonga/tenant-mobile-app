@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,13 +16,37 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isObscured = true;
   bool _isLoading = false;
 
-  void _handleLogin() {
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       
-      // TODO: Connect to Laravel Auth Service here
-      
-      print("Sending to Laravel: ${_emailController.text}");
+      // Call the Laravel backend
+      final authService = AuthService();
+      bool success = await authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Security check to ensure the widget is still on screen after the API wait
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      if (success) {
+        // Boom. Credentials are good. Send them to the Dashboard.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      } else {
+        // Authentication failed. Show a red error banner.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid credentials. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
