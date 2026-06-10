@@ -20,26 +20,23 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       
-      // Call the Laravel backend
       final authService = AuthService();
+      
       bool success = await authService.login(
         _emailController.text.trim(),
         _passwordController.text,
+        _selectedRole, 
       );
 
-      // Security check to ensure the widget is still on screen after the API wait
       if (!mounted) return;
-
       setState(() => _isLoading = false);
 
       if (success) {
-        // Boom. Credentials are good. Send them to the Dashboard.
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       } else {
-        // Authentication failed. Show a red error banner.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Invalid credentials. Please try again.'),
